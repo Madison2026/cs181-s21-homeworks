@@ -33,13 +33,12 @@ class LogisticRegressor:
         self.eta = eta
         self.runs = runs
 
-    # NOTE: Just to show how to make 'private' methods
     def __calculateError(self, x, y):
-        e = 0
-        for y_i, y_hat, x_i in zip(self.predict(y), y, x):
-            e += (y_i - y_hat) * x_i[0]
-        #print("e: " + str(e))
-        return 1
+        gradient = np.zeros((x.shape[1], 1))
+        for y_i, y_hat, x_i in zip(y, self.predict(x), x):
+            error = np.array([((y_i - y_hat) * x_i)])
+            gradient = gradient + error.T    
+        return gradient / len(x)
 
     # TODO: Optimize w using gradient descent
     def fit(self, x, y, w_init=None):
@@ -49,14 +48,15 @@ class LogisticRegressor:
         else:
             self.W = np.random.rand(x.shape[1], 1)
         for i in range(self.runs):
-            self.W = self.W - self.eta * self.__calculateError(x, y)
+            #print ("x:" + str(x))
             #print("W: " + str(self.W))
+            self.W = self.W + (self.eta * self.__calculateError(x, y))
 
     # TODO: Fix this method!
     def predict(self, x):
         #print ("x:" + str(x))
         #print("W: " + str(self.W))
-        return np.dot(x, self.W.T)
+        return sigmoid(np.dot(x, self.W))
 
 # Function to visualize prediction lines
 # Takes as input last_x, last_y, [list of models], basis function, title
@@ -129,3 +129,19 @@ if __name__ == "__main__":
         all_models.append(model)
     # Here x and y contain last dataset:
     visualize_prediction_lines(x, y, all_models, basis1, "exampleplot")
+    all_models = []
+    for _ in range(10):
+        x, y = generate_data(N)
+        x_transformed = basis2(x)
+        model = LogisticRegressor(eta=eta, runs=runs)
+        model.fit(x_transformed, y)
+        all_models.append(model)
+    visualize_prediction_lines(x, y, all_models, basis2, "basis2")
+    all_models = []
+    for _ in range(10):
+        x, y = generate_data(N)
+        x_transformed = basis3(x)
+        model = LogisticRegressor(eta=eta, runs=runs)
+        model.fit(x_transformed, y)
+        all_models.append(model)
+    visualize_prediction_lines(x, y, all_models, basis3, "basis3")
