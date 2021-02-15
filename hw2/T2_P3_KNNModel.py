@@ -1,5 +1,4 @@
 import numpy as np
-
 # Please implement the predict() method of this class
 # You can add additional private methods by beginning them with
 # two underscores. It may look like the __dummyPrivateMethod below. You can feel
@@ -21,10 +20,18 @@ class KNNModel:
         # The code in this method should be removed and replaced! We included it
         # just so that the distribution code is runnable and produces a
         # (currently meaningless) visualization.
-        preds = []
-        for x in X_pred:
-            z = np.cos(x ** 2).sum()
-            preds.append(1 + np.sign(z) * (np.abs(z) > 0.3))
+        preds = [0 for v in range(len(X_pred))]
+        for i in range(len(X_pred)):
+            distances = {} 
+            for j in range(len(self.X)):
+                d = ((X_pred[i][0] - self.X[j][0]) / 3) ** 2 + (X_pred[i][1] - self.X[j][1]) ** 2
+                distances[j] = d
+            sorted_indices = dict(sorted(distances.items(), key=lambda x: x[1]))
+            stars = [0, 0, 0]
+            for m in range(self.K):
+                star_name = self.y[list(sorted_indices.keys())[m]]
+                stars[star_name] += 1
+            preds[i] = stars.index(max(stars))
         return np.array(preds)
 
     # In KNN, "fitting" can be as simple as storing the data, so this has been written for you

@@ -79,6 +79,7 @@ X = df[['Magnitude', 'Temperature']].values
 y = np.array([star_labels[x] for x in df['Type']])
 
 # Setting up and evaluating a number of different classification models
+
 nb1 = GaussianGenerativeModel(is_shared_covariance=False)
 nb1.fit(X, y)
 visualize_boundary(nb1, X, y, 'generative_result_separate_covariances')
