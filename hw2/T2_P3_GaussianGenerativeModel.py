@@ -15,46 +15,55 @@ class GaussianGenerativeModel:
     def __optimalPi(self, y):
         pi = [] 
         for j in range(3):
-            pi.append(len([1 for i in y[0] if i == j]))
-        return pi
+            pi.append(len([1 for i in y if i == j]))
+        pi = [p / len(y) for p in pi]
+        self.pi = pi 
+        return 
 
     def __mean(self, X, y):
+        self.__optimalPi(y)
         mu = [] 
         y = np.reshape(y, (1, X.shape[0]))
-        s = sum(y @ X) 
         for j in range(3):
             n = len([1 for i in y[0] if i == j])
-            mu.append(s * (1 / n)) 
-        return mu
+            total = [0, 0]
+            for i in range(len(X)):
+                if y[0][i] == j:
+                    total[0] += X[i][0] 
+                    total[1] += X[i][1]
+            mu.append(np.array(total) * (1 / n)) 
+        return np.array(mu)
 
     def __covarianceMatrix(self, X, y):
         cov = []
         mu = self.__mean(X,y)
-        for i in range(len(X)):
-            total = 0 
-            for j in range(3):
-                total += (X[i] - mu[j]) @ (X[i] - mu[j]).T * y[i]
-            cov.append(total)
-            print("total " + str(total))
-        return (1 / len(X)) * np.array(cov)
-        #return X.T
+        X = np.array(X)
+        for j in range(3):
+            v = [0, 0]
+            for i in range(len(X)):
+                v[0] = (X[i][0] - mu[j][0]) * np.transpose(X[i][0] - mu[j][0])
+                v[1] = (X[i][1] - mu[j][1]) * np.transpose(X[i][1] - mu[j][1])
+            cov.append(np.diag(v))
+        return np.array(cov) * (1 / len(X)) 
 
     # TODO: Implement this method!
     def fit(self, X, y):
-        print("mean" + str(self.__mean(X,y)))
-        print("cov" + str(self.__covarianceMatrix(X,y)))
-        return
+        self.mu = self.__mean(X,y)
+        self.cov = self.__covarianceMatrix(X,y)
+        print("cov " + str(self.cov))
+        print("mu " + str(self.mu))
 
     # TODO: Implement this method!
     def predict(self, X_pred):
         # The code in this method should be removed and replaced! We included it
         # just so that the distribution code is runnable and produces a
         # (currently meaningless) visualization.
-
         preds = []
-        for x in X_pred:
-            z = np.sin(x ** 2).sum()
-            preds.append(1 + np.sign(z) * (np.abs(z) > 0.3))
+        for i in range(len(X_pred)):
+            stars = []
+            for j in range(3):  
+                stars.append(self.pi[j] * mvn.pdf(x=X_pred[i],mean=self.mu[j],cov=self.cov[j]))
+            preds.append(stars.index(max(stars)))
         return np.array(preds)
 
     # TODO: Implement this method!
