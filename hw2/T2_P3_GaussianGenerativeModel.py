@@ -11,6 +11,7 @@ from scipy.stats import multivariate_normal as mvn  # you may find this useful
 class GaussianGenerativeModel:
     def __init__(self, is_shared_covariance=False):
         self.is_shared_covariance = is_shared_covariance
+        self.probs = []
 
     def __optimalPi(self, y):
         pi = [] 
@@ -44,6 +45,9 @@ class GaussianGenerativeModel:
                 v[0] = (X[i][0] - mu[j][0]) * np.transpose(X[i][0] - mu[j][0])
                 v[1] = (X[i][1] - mu[j][1]) * np.transpose(X[i][1] - mu[j][1])
             cov.append(np.diag(v))
+        if self.is_shared_covariance:
+            shared = np.add(np.add(cov[0], cov[1]), cov[2]) / 3
+            return [shared, shared, shared]
         return np.array(cov) * (1 / len(X)) 
 
     # TODO: Implement this method!
@@ -64,8 +68,10 @@ class GaussianGenerativeModel:
             for j in range(3):  
                 stars.append(self.pi[j] * mvn.pdf(x=X_pred[i],mean=self.mu[j],cov=self.cov[j]))
             preds.append(stars.index(max(stars)))
+            self.probs.append(max(stars))
         return np.array(preds)
 
     # TODO: Implement this method!
     def negative_log_likelihood(self, X, y):
-        pass
+        loss = [-1 * np.log(s + .001)  for s in self.probs]
+        return sum(loss)
